@@ -1,6 +1,5 @@
 import urllib2
 import json
-from django.conf import settings
 import hashlib
 import hmac
 import time
@@ -73,9 +72,9 @@ class CoinbaseV1():
     def get_http(
             self,
             url,
-            body=None,
-            access_key=settings.COINBASE_API_KEY,
-            access_secret=settings.COINBASE_API_SECRET):
+            body,
+            access_key,
+            access_secret):
 
         opener = urllib2.build_opener()
         nonce = int(time.time() * 1e6)
@@ -91,16 +90,16 @@ class CoinbaseV1():
             return e
 
     def get_json(self, url,
-                 body=None,
-                 access_key=settings.COINBASE_API_KEY,
-                 access_secret=settings.COINBASE_API_SECRET):
+                 body,
+                 access_key,
+                 access_secret):
         response = self.get_http(url,body,access_key,access_secret)
         json_response = response.read()
         return json.loads(json_response)
 
     def post_json(self, url, data_obj,
-                 access_key=settings.COINBASE_API_KEY,
-                 access_secret=settings.COINBASE_API_SECRET):
+                 access_key,
+                 access_secret):
         response = self.get_http(url,json.dumps(data_obj),access_key,access_secret)
         json_response = response.read()
         return json.loads(json_response)
@@ -159,26 +158,24 @@ class CoinbaseV1():
 
 # Redirect the user to this page
 # https://coinbase.com/oauth/authorize?response_type=code&client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_CALLBACK_URL
-    def get_oauth_redirect(self):
-
-        print 'redirect_uri:{0}'.format(settings.COINBASE_OAUTH_CLIENT_CALLBACK)
+    def get_oauth_redirect(self, client_id, cliemt_callback):
 
         return 'https://coinbase.com/oauth/authorize?response_type=code&client_id={0}&redirect_uri={1}'.format(
-            settings.COINBASE_OAUTH_CLIENT_ID,
-            settings.COINBASE_OAUTH_CLIENT_CALLBACK)
+            client_id,
+            cliemt_callback)
 
 # Initiate a POST request to get the access token
 # https://coinbase.com/oauth/token?grant_type=authorization_code&code=CODE&redirect_uri=YOUR_CALLBACK_URL&client_id=CLIENT_ID&client_secret=CLIENT_SECRET
-    def get_oauth_response(self,code):
+    def get_oauth_response(self,code, client_callback, client_id, client_secret):
         post_url = 'https://coinbase.com/oauth/token?grant_type=authorization_code' \
                    '&code={0}&' \
                    'redirect_uri={1}&' \
                    'client_id={2}' \
                    '&client_secret={3}'.format(
             code,
-            settings.COINBASE_OAUTH_CLIENT_CALLBACK,
-            settings.COINBASE_OAUTH_CLIENT_ID,
-            settings.COINBASE_OAUTH_CLIENT_SECRET
+            client_callback,
+            client_id,
+            client_secret
         )
 
         response = self.get_http(post_url,'{}')
@@ -202,7 +199,9 @@ class CoinbaseV1():
                     description,
                     refresh_token,
                     callback_url,
-                    custom):
+                    custom,
+                    client_id,
+                    client_secret):
 
         #make a button id that will persist for callback
         # button_guid = str(uuid.uuid1())
@@ -231,15 +230,15 @@ class CoinbaseV1():
 
         refresh_response = self.refresh_token(
             refresh_token,
-            settings.COINBASE_OAUTH_CLIENT_ID,
-            settings.COINBASE_OAUTH_CLIENT_SECRET)
+            client_id,
+            client_secret)
 
         button_response = self.post_button_oauth(
                 button_request,
                 refresh_response['access_token'],
                 refresh_response['refresh_token'],
-                settings.COINBASE_OAUTH_CLIENT_ID,
-                settings.COINBASE_OAUTH_CLIENT_SECRET)
+                client_id,
+                client_secret)
 
         return {
             'refresh_response':refresh_response,
