@@ -2,6 +2,7 @@
 
 from distutils.core import setup
 
+
 setup(name='coinbase4py',
       version='0.3.3',
       description='Integration Library for the Coinbase API',
