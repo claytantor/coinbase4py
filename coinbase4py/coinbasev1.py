@@ -3,7 +3,8 @@ import json
 import hashlib
 import hmac
 import time
-import uuid
+
+from django.conf import settings
 
 # GET /api/v1/account/balance HTTP/1.1
 # Accept: */*
@@ -28,6 +29,9 @@ class CoinbaseV1():
             'client_id':app_client_id,
             'client_secret':app_client_secret
         }
+
+        if settings.DEBUG == 'true':
+            print json.dumps(refresh_body)
 
         refresh_response = opener.open(urllib2.Request(
             'https://coinbase.com/oauth/token',

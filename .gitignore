@@ -54,6 +54,6 @@ docs/_build/
 target/
 .idea/
 .idea/scopes/scope_settings.xml
-.idea/scopes/
-.idea/scopes/
-
+.idea/scopes/*
+coinbase4py/test/clayroots.json
+coinbase4py/test/claytantor.json
