@@ -37,117 +37,181 @@ $(document).ready(function(){
 </script>
   <body>
 
-    {% include "header.html" %}
+   {% include "topnav.html" %}
 
     <div class="container">
 
       <div class="starter-template">
         <div class="main_area col-md-10">
 
-            <h2 id="sec0">Content</h2>
+            <h2 id="sec0">What is coinbase4py?</h2>
             <p>
-              At Bootply we like to build simple Bootstrap templates that utilize the code Bootstap CSS without a lot of customization. Sure you can
-              find a lot of Bootstrap themes and inspiration, but these templates tend to be heavy on customization.</p>
+              coinbase4py is a unauthorized python client and django application implementation of the
+                <a href =https://www.coinbase.com/api/doc/1.0/users/index.html">coinbase API.</a> While
+                currently being incomplete this project includes the following client implementations:
 
+                <ul>
+                    <li><a href="https://www.coinbase.com/docs/api/authentication">Three Legged OAuth</a></li>
+                    <li><a href="https://www.coinbase.com/api/doc/1.0/users/index.html">Get the User</a></li>
+                    <li><a href="https://www.coinbase.com/api/doc/1.0/buttons.html">Making Payment Buttons</a></li>
+                </ul>
+                It is also a fully functional coinbase application that implements these features so there is a testable
+                codebase template that developers can use to create new coinbase applications for django. Got a coinbase.com account?
+                Then please go ahead and <a href="{% url 'login_user' %}">login using coinbase.</a>
+            </p>
             <hr>
-            <h2>Code</h2>
+            <h2 id="sec1">Installation</h2>
+<p>Get a git clone of the source tree:</p>
+<pre><code class="language-bash">$ git clone https://github.com/claytantor/coinbase4py.git</code></pre>
+
+<p>Then you'll need the "lib" subdir on your PYTHONPATH:</p>
+
+<pre><code class="language-bash">cd coinbase4py
+python setup.py install</code></pre>
+            <hr>
+            <h2 id="sec2">Three Legged OAuth</h2>
             <p>
-                <pre><code class="language-css">p { color: red }</code></pre>
+                OAuth is an open standard to authorization. OAuth provides client applications a
+                'secure delegated access' to server resources on behalf of a resource owner.
+                It specifies a process for resource owners to authorize third-party access
+                to their server resources without sharing their credentials. Designed
+                specifically to work with Hypertext Transfer Protocol (HTTP), OAuth
+                essentially allows access tokens to be issued to third-party clients by
+                an authorization server, with the approval of the resource owner, or end-user.
+                The client then uses the access token to access the protected resources
+                hosted by the resource server. <em><a href="http://en.wikipedia.org/wiki/OAuth">
+                --- From Wikipedia, the free encyclopedia</a></em>
+            </p>
+            <p>
+                <h3>Redirect The Login Request to Coinbase</h3>
+                When choosing to login using Oauth from coinbase a URL needs to be created that the
+                tells coinbase what application is trying to authorize, and what URL coinbase needs to
+                send the browser to once it has been authorized.
+<pre><code class="language-python">from coinbase4py.coinbasev1 import CoinbaseV1
+
+def login_user(request):
+
+    coinbase_client = CoinbaseV1()
+
+    # we need to get the the OAUth redirect url, this will sent the user to coinbase
+    # once they authorize the application coinbase will send the browser to the URL
+    # set to settings.COINBASE_OAUTH_CLIENT_CALLBACK
+    redirect = coinbase_client.get_oauth_redirect(
+            settings.COINBASE_OAUTH_CLIENT_ID,
+            settings.COINBASE_OAUTH_CLIENT_CALLBACK)
+
+    return HttpResponseRedirect(redirect)</code></pre>
+                <h3>Authorize the Application on Coinbase</h3>
+                For tha OAuth application to be allowed to access the user's coinbase account they must
+                authorize the application.
+                <div class="text-center" style="padding: 10px;"><img src="{{ STATIC_URL }}img/cb4py_auth.png" class="img-responsive"/></div>
+
+                <h3>Get The OAuth Response</h3>
+                Coinbase returns a code that the coinbase client will use to get an access token. The client application
+                will then use this code to get the access_token for the user.
+
+<pre><code class="language-python">#use the code to POST and get an access_token
+coinbase_client = CoinbaseV1()
+
+#def get_oauth_response(self, code, client_callback, client_id, client_secret):
+response_obj = coinbase_client.get_oauth_response(
+    request.GET['code'],
+    settings.COINBASE_OAUTH_CLIENT_CALLBACK,
+    settings.COINBASE_OAUTH_CLIENT_ID,
+    settings.COINBASE_OAUTH_CLIENT_SECRET)</code></pre>
+            </p>
+            <p>From this point you can make any API calls you would like, including those to get the coinbase user.
+                Once you get the user info from coinbase you can either create the user in your application
+                store or get it using
+                the coinbase email address. Finally you can authenticate the user with the
+                <a href="https://docs.djangoproject.com/en/1.6/topics/auth/">Django AUthentication Framework</a>
             </p>
 
+             <hr>
+
+            <h2 id="sec3">Using Refresh Tokens</h2>
             <p>
-              Rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae
-              dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia cor magni dolores
-              eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit,
-              sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.
-              Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut.
-              Rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae
-              dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia cor magni dolores
-              eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit,
-              sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.
-              Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut!</p>
-            <hr>
-            <h2 id="sec1">Content</h2>
-            <p>
-              Rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae
-              dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut.
+                As a security measure coinbase requires that you pass a refresh token to any
+                unit call if you want have an uninterrupted authorization chain to future unit calls.
+                When you pass the refresh token, along with the access token given you will receive a new
+                refresh token that can be used for the next call. <strong>The OAuth implementation expects that the
+                client application will track the state of the refresh token for all unit calls.</strong>
             </p>
-            <div class="row">
-              <div class="col-md-6">
-                <div class="panel panel-default">
-                  <div class="panel-heading"><h3>Hello.</h3></div>
-                  <div class="panel-body">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis pharetra varius quam sit amet vulputate.
-                    Quisque mauris augue, molestie tincidunt condimentum vitae, gravida a libero. Aenean sit amet felis
-                    dolor, in sagittis nisi. Sed ac orci quis tortor imperdiet venenatis. Duis elementum auctor accumsan.
-                    Aliquam in felis sit amet augue.
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="panel panel-default">
-                  <div class="panel-heading"><h3>Hello.</h3></div>
-                  <div class="panel-body">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis pharetra varius quam sit amet vulputate.
-                    Quisque mauris augue, molestie tincidunt condimentum vitae, gravida a libero. Aenean sit amet felis
-                    dolor, in sagittis nisi. Sed ac orci quis tortor imperdiet venenatis. Duis elementum auctor accumsan.
-                    Aliquam in felis sit amet augue.
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <hr>
-
-            <h2 id="sec2">Section 2</h2>
             <p>
-              Rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae
-              dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia cor magni dolores
-              eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit,
-              sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.
-              Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut!
+                coinbase4py manages this, and all unit calls require the refresh token that was returned
+                in the previous unit call. coinbase4py also will always return a new refresh token on
+                any unit call to the coinbase API as part of the response model.
             </p>
-            <div class="row">
-              <div class="col-md-4"><img class="img-circle" src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" alt="Generic placeholder image" style="width: 140px; height: 140px;"></div>
-              <div class="col-md-4"><img class="img-circle" src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" alt="Generic placeholder image" style="width: 140px; height: 140px;"></div>
-              <div class="col-md-4"><img class="img-circle" src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" alt="Generic placeholder image" style="width: 140px; height: 140px;"></div>
-            </div>
+            <p>
+<pre><code class="language-python">#use the code to POST and get an access_token
+coinbase_client = CoinbaseV1()
+
+#def get_oauth_response(self, code, client_callback, client_id, client_secret):
+response_obj = coinbase_client.get_oauth_response(
+    request.GET['code'],
+    settings.COINBASE_OAUTH_CLIENT_CALLBACK,
+    settings.COINBASE_OAUTH_CLIENT_ID,
+    settings.COINBASE_OAUTH_CLIENT_SECRET)
+
+cbuser = CoinbaseUser.objects.get(user__email=oauth_user['email'])
+cbuser.coinbase_refresh_token = response_obj['refresh_token']
+cbuser.save()</code></pre>
+            </p>
 
             <hr>
-
-            <h2 id="sec3">Section 3</h2>
+            <h2 id="sec4">Get the User</h2>
             <p>
-              Images are responsive sed @mdo but sum are more fun peratis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium,
-              totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae
-              dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia cor magni dolores
-              eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit,
-              sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.
-              Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut..</p>
+                The biggest reason to get the user is to sync the user information on coinbase to
+                the user account for your application. The user model is then available. Check out
+                the <a href="https://www.coinbase.com/api/doc/1.0/users/index.html">users API</a>
+                for the full object model.
+            </p>
             <p>
-              Fos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit,
-              sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.
-              Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut..</p>
+<pre><code class="language-python">#client calls to the API require both access_token and refresh token
+coinbase_client = CoinbaseV1()
+
+# get the user object using the access token
+# see https://www.coinbase.com/api/doc/1.0/users/index.html
+cbuser_response = coinbase_client.get_oauth_users(
+    response_obj['access_token'],
+    response_obj['refresh_token'])
+
+oauth_user = cbuser_response['users'][0]['user'])</code></pre>
+            </p>
 
 
-            <h2 id="sec4">Section 4</h2>
+<hr>
+            <h2 id="sec5">Making Payment Buttons</h2>
             <p>
-              Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium,
-              totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae
-              dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia cor magni dolores
-              eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit,
-              sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.
-              Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut.</p>
+                Payment buttons allow you to integrate the dynamic creation of payment buttons
+                into your application. This can be helpful for online commerce or crowdfunding applications
+                where people want donations or payments to be created for specifics good, services or as
+                a donation.
+            </p>
+            <p>
+<pre><code class="language-python">#client calls to the API require both access_token and refresh token
+coinbase_client = CoinbaseV1()
 
-            <hr>
-            <h4><a href="http://www.bootply.com/Gygh9swISB">Edit on Bootply</a></h4>
-            <hr>
+# create a button as the coinbase user via OAuth
+button_response = client_coinbase.post_button_oauth(
+    button_request,
+    refresh_response['access_token'],
+    refresh_response['refresh_token'],
+    settings.COINBASE_OAUTH_CLIENT_ID,
+    settings.COINBASE_OAUTH_CLIENT_SECRET)</code></pre>
+            </p>
 
 
         </div>
 
         <div class="side_area col-md-2" style="text-align: right;" id="rightCol">
             <ul class="nav nav-tabs nav-stacked" data-spy="affix" id="sidebar">
-                <li class="sidebar-li  active"><a href="#sec0">Section One</a></li>
-                <li class="sidebar-li"><a href="#sec1">Section Two</a></li>
-                <li class="sidebar-li"><a href="#sec2">Section Three</a></li>
+                <li class="sidebar-li  active"><a href="#sec0">What is coinbase4py?</a></li>
+                <li class="sidebar-li"><a href="#sec1">Installation</a></li>
+                <li class="sidebar-li"><a href="#sec2">Three Legged OAuth</a></li>
+                <li class="sidebar-li"><a href="#sec3">Using Refresh Tokens</a></li>
+                <li class="sidebar-li"><a href="#sec4">Get the User</a></li>
+                <li class="sidebar-li"><a href="#sec5">Making Payment Buttons</a></li>
             </ul>
 
         </div>
@@ -155,7 +219,7 @@ $(document).ready(function(){
       </div>
 
     </div><!-- /.container -->
-
+    {% include "footer.html" %}
 
     <!-- Bootstrap core JavaScript
     ================================================== -->

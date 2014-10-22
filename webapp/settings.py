@@ -15,7 +15,6 @@ config = RawConfigParser()
 #place in a dir that is not managed in the code base
 # print 'config dir: {0}/conf/gitpatron_settings.ini'.format(CONF_DIR)
 config.read('{0}/conf/coinbase4py_settings.ini'.format(CONF_DIR))
-print 'loading config file: {0}/conf/coinbase4py_settings.ini'.format(CONF_DIR)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
@@ -51,7 +50,10 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.admin',
     'django.contrib.humanize',
+    'django.contrib.staticfiles',
     'coinbase4py',
+    'webapp',
+    'webapp.templatetags',
 
 )
 
@@ -106,16 +108,23 @@ STATICFILES_FINDERS = (
 #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
-print PROJECT_DIR
 TEMPLATE_DIRS = (
     PROJECT_DIR + '/../webapp/templates/',
 )
 
+
 USER_ONE=config.get('coinbase4py','USER_ONE')
 USER_TWO=config.get('coinbase4py','USER_TWO')
 TEST_STATE_DIR=config.get('coinbase4py','TEST_STATE_DIR')
+COINBASE4PY_PW_SECRET_KEY=config.get('coinbase4py','COINBASE4PY_PW_SECRET_KEY')
 
 COINBASE_OAUTH_CLIENT_APP=config.get('coinbase','COINBASE_OAUTH_CLIENT_APP')
 COINBASE_OAUTH_CLIENT_ID=config.get('coinbase','COINBASE_OAUTH_CLIENT_ID')
 COINBASE_OAUTH_CLIENT_SECRET=config.get('coinbase','COINBASE_OAUTH_CLIENT_SECRET')
 COINBASE_OAUTH_CLIENT_CALLBACK=config.get('coinbase','COINBASE_OAUTH_CLIENT_CALLBACK')
+COINBASE4PY_APP_URL=config.get('coinbase','COINBASE4PY_APP_URL')
+COINBASE_ORDER_CALLBACK='{0}/{1}'.format(
+    config.get('coinbase','COINBASE4PY_APP_URL'),
+    config.get('coinbase','COINBASE_ORDER_CALLBACK'))
+
+

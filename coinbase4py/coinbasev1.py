@@ -18,6 +18,7 @@ class CoinbaseV1():
 
     def refresh_token(
             self,
+            access_token,
             refresh_token,
             app_client_id,
             app_client_secret):
@@ -25,16 +26,17 @@ class CoinbaseV1():
         opener = urllib2.build_opener()
         refresh_body = {
             'grant_type':'refresh_token',
+            'access_token':access_token,
             'refresh_token':refresh_token,
             'client_id':app_client_id,
             'client_secret':app_client_secret
         }
 
-        if settings.DEBUG == 'true':
-            print json.dumps(refresh_body)
+        # if settings.DEBUG == 'true':
+        #     print json.dumps(refresh_body)
 
         refresh_response = opener.open(urllib2.Request(
-            'https://coinbase.com/oauth/token',
+            'https://coinbase.com/oauth/token?access_token={0}'.format(access_token),
             json.dumps(refresh_body),
             {'Content-Type': 'application/json'}))
 
@@ -42,22 +44,47 @@ class CoinbaseV1():
 
         return json.loads(response_string)
 
-
-    # this really neads to be refactored to always return an object
-    # so that the client refresh can have control over the model.
-    def get_http_oauth(
+    # this version is used for no oauth or api requests
+    def get_and_post_http(
             self,
             url,
-            access_token,
-            refresh_token,
-            app_client_id,
-            app_client_secret,
-            body=None,
-            count=0):
+            body=None):
 
         opener = urllib2.build_opener()
 
         try:
+            if body:
+                print 'POST body: {0}'.format(body)
+
+            response_stream = opener.open(urllib2.Request('{0}'.format(url),body,{'Content-Type': 'application/json'}))
+
+            #return the valid access token, this will be updated if needed to be refreshed
+            response_string = response_stream.read()
+            response_object = json.loads(response_string)
+            response_object['error_code'] = None
+
+            return response_object
+
+        except urllib2.HTTPError as e:
+            return {'error_code':e.code,'message':'HTTP Error'}
+
+    # this really neads to be refactored to always return an object
+    # so that the client refresh can have control over the model.
+    # the behvior here is to act as a post when a body is present and get when None
+    def get_and_post_http_oauth(
+            self,
+            url,
+            access_token,
+            refresh_token,
+            body=None):
+
+        opener = urllib2.build_opener()
+
+        try:
+            print 'url: {0}?access_token={1}'.format(url,access_token)
+            if body:
+                print 'POST body: {0}'.format(body)
+
             response_stream = opener.open(urllib2.Request('{0}?access_token={1}'.format(url,access_token),body,{'Content-Type': 'application/json'}))
 
             #return the valid access token, this will be updated if needed to be refreshed
@@ -73,12 +100,12 @@ class CoinbaseV1():
             return {'error_code':e.code,'message':'HTTP Error'}
 
 
-    def get_http(
+    def get_and_post_http_api(
             self,
             url,
-            body,
-            access_key,
-            access_secret):
+            body=None,
+            access_key=None,
+            access_secret=None):
 
         opener = urllib2.build_opener()
         nonce = int(time.time() * 1e6)
@@ -93,7 +120,7 @@ class CoinbaseV1():
         except urllib2.HTTPError as e:
             return e
 
-    def get_json(self, url,
+    def get_json_api(self, url,
                  body,
                  access_key,
                  access_secret):
@@ -101,76 +128,24 @@ class CoinbaseV1():
         json_response = response.read()
         return json.loads(json_response)
 
-    def post_json(self, url, data_obj,
+    def post_json_api(self, url, data_obj,
                  access_key,
                  access_secret):
         response = self.get_http(url,json.dumps(data_obj),access_key,access_secret)
         json_response = response.read()
         return json.loads(json_response)
 
-
-# REQUEST
-# {
-#   "button": {
-#     "name": "test",
-#     "type": "buy_now",
-#     "price_string": "1.23",
-#     "price_currency_iso": "USD",
-#     "custom": "Order123",
-#     "callback_url": "http://www.example.com/my_custom_button_callback",
-#     "description": "Sample description",
-#     "type": "buy_now",
-#     "style": "custom_large",
-#     "include_email": true
-#   }
-# }
-
-# Response
-# {
-#   "success": true,
-#   "button": {
-#     "code": "93865b9cae83706ae59220c013bc0afd",
-#     "type": "buy_now",
-#     "style": "custom_large",
-#     "text": "Pay With Bitcoin",
-#     "name": "test",
-#     "description": "Sample description",
-#     "custom": "Order123",
-#     "callback_url": "http://www.example.com/my_custom_button_callback",
-#     "price": {
-#       "cents": 123,
-#       "currency_iso": "USD"
-#     }
-#   }
-# }
-    #test
-    def post_button_oauth(self,
-            button_obj,
-            access_token,
-            refresh_token,
-            app_client_id,
-            app_secret_id):
-        response_object = self.get_http_oauth('https://coinbase.com/api/v1/buttons',
-                                       access_token,
-                                       refresh_token,
-                                       app_client_id,
-                                       app_secret_id,
-                                       json.dumps(button_obj))
-        return response_object
-
-
-
 # Redirect the user to this page
 # https://coinbase.com/oauth/authorize?response_type=code&client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_CALLBACK_URL
-    def get_oauth_redirect(self, client_id, cliemt_callback):
+    def get_oauth_redirect(self, client_id, client_callback):
 
         return 'https://coinbase.com/oauth/authorize?response_type=code&client_id={0}&redirect_uri={1}'.format(
             client_id,
-            cliemt_callback)
+            client_callback)
 
 # Initiate a POST request to get the access token
 # https://coinbase.com/oauth/token?grant_type=authorization_code&code=CODE&redirect_uri=YOUR_CALLBACK_URL&client_id=CLIENT_ID&client_secret=CLIENT_SECRET
-    def get_oauth_response(self,code, client_callback, client_id, client_secret):
+    def post_oauth_response(self, code, client_callback, client_id, client_secret):
         post_url = 'https://coinbase.com/oauth/token?grant_type=authorization_code' \
                    '&code={0}&' \
                    'redirect_uri={1}&' \
@@ -182,7 +157,7 @@ class CoinbaseV1():
             client_secret
         )
 
-        response = self.get_http(post_url,'{}')
+        oauth_response = self.get_and_post_http(post_url, {})
 
         # Response containing the 'access_token'
         # {
@@ -193,60 +168,97 @@ class CoinbaseV1():
         #     "scope": "universal"
         # }
 
-        return json.loads(response.read())
+        return oauth_response
 
 
 
     def make_button(self,
-                    amount,
-                    name,
-                    description,
+                    button_request,
+                    access_token,
                     refresh_token,
-                    callback_url,
-                    custom,
                     client_id,
                     client_secret):
 
-        #make a button id that will persist for callback
-        # button_guid = str(uuid.uuid1())
-        # callback_url = '{0}/{1}/?secret={2}'.format(
-        #     settings.COINBASE_ORDER_CALLBACK,
-        #     patron_username,
-        #     coinbase_callback_secret)
-
-        button_request = {
-            'button':{
-                'name':name,
-                'custom':custom,
-                'description':description,
-                'price_string':'{0}'.format(amount),
-                'price_currency_iso':'USD',
-                'button_type':'donation',
-                'style':'donation_small',
-                'choose_price':True,
-                'price1':5.00,
-                'price2':10.00,
-                'price3':25.00,
-                'price4':100.00,
-                'callback_url':callback_url
-            }
-        }
-
+        #refres the token
         refresh_response = self.refresh_token(
+            access_token,
             refresh_token,
             client_id,
             client_secret)
 
-        button_response = self.post_button_oauth(
-                button_request,
-                refresh_response['access_token'],
-                refresh_response['refresh_token'],
-                client_id,
-                client_secret)
+        #this has a body so it will POST
+        # use the new token
+        button_response = self.get_and_post_http_oauth('https://coinbase.com/api/v1/buttons',
+                                       refresh_response['access_token'],
+                                       refresh_response['refresh_token'],
+                                       json.dumps(button_request))
 
-        return {
-            'refresh_response':refresh_response,
-            'button_response':button_response
-        }
+        button_response['access_token'] = refresh_response['access_token']
+        button_response['refresh_token'] = refresh_response['refresh_token']
 
+
+        return button_response
+
+# # Request
+# GET https://api.coinbase.com/v1/users
+#
+# # Response
+# {
+#   "users": [
+#     {
+#       "user": {
+#         "id": "512db383f8182bd24d000001",
+#         "name": "User One",
+#         "email": "user1@example.com",
+#         "time_zone": "Pacific Time (US & Canada)",
+#         "native_currency": "USD",
+#         "balance": {
+#           "amount": "49.76000000",
+#           "currency": "BTC"
+#         },
+#         "merchant": {
+#           "company_name": "Company Name, Inc.",
+#           "logo": {
+#             "small": "http://smalllogo.example",
+#             "medium": "http://mediumlogo.example",
+#             "url": "http://logo.example"
+#           }
+#         },
+#         "buy_level": 1,
+#         "sell_level": 1,
+#         "buy_limit": {
+#           "amount": "10.00000000",
+#           "currency": "BTC"
+#         },
+#         "sell_limit": {
+#           "amount": "100.00000000",
+#           "currency": "BTC"
+#         }
+#       }
+#     }
+#   ]
+# }
+    def get_oauth_users(self,
+                        access_token,
+                        refresh_token,
+                        client_id,
+                        client_secret):
+
+        #refres the token
+        refresh_response = self.refresh_token(
+            access_token,
+            refresh_token,
+            client_id,
+            client_secret)
+
+        #this has a no body so it will GET
+        response_object = self.get_and_post_http_oauth(
+            'https://api.coinbase.com/v1/users',
+            refresh_response['access_token'],
+            refresh_response['refresh_token'])
+
+        response_object['access_token'] = refresh_response['access_token']
+        response_object['refresh_token'] = refresh_response['refresh_token']
+
+        return response_object
 

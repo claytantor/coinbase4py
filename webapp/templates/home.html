@@ -1,0 +1,164 @@
+{% load coinbase4pytags %}
+<!DOCTYPE html>
+<html lang="en">
+{% include "head.html" %}
+
+<script type="text/javascript">
+$(document).ready(function(){
+    /* activate sidebar */
+    $('#sidebar').affix({
+      offset: {
+        top: 235
+      }
+    });
+
+    /* activate scrollspy menu */
+    var $body   = $(document.body);
+    var navHeight = $('.navbar').outerHeight(true) + 10;
+
+    $body.scrollspy({
+        target: '#rightCol',
+        offset: navHeight
+    });
+
+    /* smooth scrolling sections */
+    $('a[href*=#]:not([href=#])').click(function() {
+        if (location.pathname.replace(/^\//,'') == this.pathname.replace(/^\//,'') && location.hostname == this.hostname) {
+          var target = $(this.hash);
+          target = target.length ? target : $('[name=' + this.hash.slice(1) +']');
+          if (target.length) {
+            $('html,body').animate({
+              scrollTop: target.offset().top - 50
+            }, 1000);
+            return false;
+          }
+        }
+    });
+});
+</script>
+  <body>
+
+    {% include "topnav.html" %}
+
+    <div class="container">
+
+      <div class="starter-template">
+        <div class="main_area col-md-10">
+
+            <h2 id="sec0">Coinbase User</h2>
+            <p><pre><code class="language-javascript">{{ coinbase_user_json }}</code></pre></p>
+            <hr>
+            <h2 id="sec1">My Buttons</h2>
+            <p>
+                Payment buttons allow a coinbase account holder to create payment buttons to be placed
+                on a website. The payment buttons use a combination of the coinbase4py COINBASE_OAUTH_CLIENT_ID and
+                COINBASE_OAUTH_CLIENT_SECRET, and the user's OAuth credentials to create custom buttons on behalf of the
+                logged in user.
+            </p>
+            <p>
+
+                {% for button in user_buttons %}
+                 <div class="panel panel-default">
+                  <div class="panel-heading">
+                    <h3 class="panel-title">{{ button.code }}</h3>
+                  </div>
+                  <div class="panel-body">
+                    <div>
+                        <a class="coinbase-button"
+                            data-code="{{ button.code }}"
+                            data-button-style="buy_now_small"
+                            href="https://coinbase.com/checkouts/{{ button.code }}">
+                            Pay Bitcoins</a>
+                        <script src="https://coinbase.com/assets/button.js" type="text/javascript"></script>
+                    </div>
+                    <pre><code class="language-markup">&lt;a class=&quot;coinbase-button&quot;
+   data-code=&quot;{{ button.code }}&quot;
+   data-button-style=&quot;buy_now_small&quot;
+   href=&quot;https://coinbase.com/checkouts/{{ button.code }}&quot;&gt;
+   Pay Bitcoins&lt;/a&gt;
+&lt;script src=&quot;https://coinbase.com/assets/button.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;</code></pre>
+                  </div>
+                </div>
+                {% endfor %}
+            </p>
+
+            <h3>Make A Button</h3>
+
+            <p>
+                <h4>Callback URL for button</h4>
+                <pre><code class="language-markup">/cbcallback/{{ request.user.username }}/</code></pre>
+                {% if button_form.errors %}
+                <div class="form_errors bs-callout bs-callout-danger">
+                    <h4>Form Errors</h4>
+                    <p>Please fix the errors below and re-submit.</p>
+                    <ul>
+                    {% for error in button_form.payment_type.errors %}
+                        <li>payment_type:&nbsp;<strong>{{ error|escape }}</strong></li>
+                    {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                <form action="{% url 'home' %}" method="post" id="button_form">{% csrf_token %}
+                    {% for hidden in button_form.hidden_fields %}
+                    {{ hidden }}
+                    {% endfor %}
+                    {% for field in button_form.visible_fields %}
+                        <div class="fieldWrapper" style="margin-bottom: 5px;">
+                            {{ field.label_tag }} {{field|addcss:"form-control"}}
+                        </div>
+                    {% endfor %}
+                    <p style="margin-top: 20px;"><input type="submit" value="Create Button" class="btn btn-primary"/></p>
+                </form>
+
+            </p>
+            <div style="margin-bottom: 160px;">&nbsp;</div>
+
+
+
+{#            <div class="row">#}
+{#              <div class="col-md-6">#}
+{#                <div class="panel panel-default">#}
+{#                  <div class="panel-heading"><h3>Hello.</h3></div>#}
+{#                  <div class="panel-body">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis pharetra varius quam sit amet vulputate.#}
+{#                    Quisque mauris augue, molestie tincidunt condimentum vitae, gravida a libero. Aenean sit amet felis#}
+{#                    dolor, in sagittis nisi. Sed ac orci quis tortor imperdiet venenatis. Duis elementum auctor accumsan.#}
+{#                    Aliquam in felis sit amet augue.#}
+{#                  </div>#}
+{#                </div>#}
+{#              </div>#}
+{#              <div class="col-md-6">#}
+{#                <div class="panel panel-default">#}
+{#                  <div class="panel-heading"><h3>Hello.</h3></div>#}
+{#                  <div class="panel-body">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis pharetra varius quam sit amet vulputate.#}
+{#                    Quisque mauris augue, molestie tincidunt condimentum vitae, gravida a libero. Aenean sit amet felis#}
+{#                    dolor, in sagittis nisi. Sed ac orci quis tortor imperdiet venenatis. Duis elementum auctor accumsan.#}
+{#                    Aliquam in felis sit amet augue.#}
+{#                  </div>#}
+{#                </div>#}
+{#              </div>#}
+{#            </div>#}
+
+
+        </div>
+
+        <div class="side_area col-md-2" style="text-align: right;" id="rightCol">
+            <ul class="nav nav-tabs nav-stacked" data-spy="affix" id="sidebar">
+                <li class="sidebar-li active"><a href="#sec0">Coinbase User</a></li>
+                <li class="sidebar-li"><a href="#sec1">My Buttons</a></li>
+            </ul>
+
+        </div>
+
+      </div>
+
+    </div><!-- /.container -->
+    {% include "footer.html" %}
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="{{ STATIC_URL }}js/bootstrap.min.js"></script>
+  </body>
+</html>

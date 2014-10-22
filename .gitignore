@@ -57,3 +57,4 @@ target/
 .idea/scopes/*
 coinbase4py/test/clayroots.json
 coinbase4py/test/claytantor.json
+webapp/templatetags/__init__.py

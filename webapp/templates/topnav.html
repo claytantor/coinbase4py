@@ -10,17 +10,24 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="#">coinbase4py</a>
+      <a class="navbar-brand" href="{% url 'site_landing' %}">coinbase4py</a>
     </div>
     <div class="collapse navbar-collapse">
       <ul class="nav navbar-nav">
-{#        <li class="active"><a href="#">Home</a></li>#}
+          {% if request.user.is_authenticated %}
+            <li class="active"><a href="{% url 'home' %}">Home</a></li>
+          {% endif %}
         <li><a href="#about">Frequent Questions</a></li>
 {#        <li><a href="#contact">Contact</a></li>#}
       </ul>
       <ul class="nav navbar-nav navbar-right">
-          <li><a href="#about">login with coinbase</a></li>
-          <li style="width: 60px;">&nbsp;</li>
+          {% if request.user.is_authenticated %}
+              <li><a href="{% url 'logout_user' %}">logout {{ request.user.username }}</a></li>
+              <li style="width: 60px;">&nbsp;</li>
+          {% else %}
+              <li><a href="{% url 'login_user' %}">login with coinbase</a></li>
+              <li style="width: 60px;">&nbsp;</li>
+          {% endif %}
         </ul>
 
     </div><!--/.nav-collapse -->
